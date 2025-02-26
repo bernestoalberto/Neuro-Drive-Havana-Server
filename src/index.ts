@@ -1,13 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-
+import { getAuth } from 'firebase-admin/auth';
 import multer from 'multer';
 const singleUpload = multer().single('avatar');
 const PORT = 8000;
 
 // Loading modules
-
 import { analyzeData } from './analyze.js';
 import {
   semanticSearch,
@@ -16,6 +15,33 @@ import {
   llamaSemanticSearch,
 } from './search.js';
 
+// import sdk from '../firebase.sdk.ts';
+// // pass it to middlewear
+// import verify  from './auth.middleware';
+
+// let verify = verify(sdk);
+// import firebaseApp from './firebase.sdk.js';
+// pass it to middleware
+// import * as verify from './auth.middleware.js';
+
+// function localGetAuth(): any {
+//   return getAuth(firebaseApp)
+//     .getUserByEmail('user@admin.example.com')
+//     .then((user: any) => {
+//       // Confirm user is verified.
+//       if (user.emailVerified) {
+//         // Add custom claims for additional privileges.
+//         // This will be picked up by the user on token refresh or next sign in on new device.
+//         return getAuth().setCustomUserClaims(user.uid, {
+//           admin: true,
+//         });
+//       }
+//     })
+//     .catch((error: any) => {
+//       console.log(error);
+//     });
+// }
+
 // Multer Configuration
 const storage = multer.diskStorage({
   destination: function (
@@ -23,19 +49,39 @@ const storage = multer.diskStorage({
     file: any,
     cb: (arg0: null, arg1: string) => void
   ) {
-    cb(null, 'uploads/'); // Store images in an 'uploads' folder
+    req.query;
+    const ui = file;
+    cb(null, 'server/uploads/'); // Store images in an 'uploads' folder
   },
   filename: function (
     req: any,
     file: { originalname: any },
     cb: (arg0: null, arg1: any) => void
   ) {
+    let peter = req.query;
     cb(null, file.originalname); // Maintain original filename
   },
 });
+// const fileFilter = (
+//   req: any,
+//   file: { mimetype: string },
+//   cb: multer.FileFilterCallback
+// ) => {
+//   // Check if file is an image or video
+//   if (
+//     req.file &&
+//     file.mimetype.startsWith('image/') ||
+//     file.mimetype.startsWith('video/')
+//   ) {
+//     cb(null, true);
+//   }
+// };
 // Multer Setup (For handling file uploads)
-const upload = multer({ storage });
-// const upload = multer({ dest: 'uploads/' });
+const upload = multer({
+  storage,
+  //   fileFilter: fileFilter,
+  limits: { fileSize: 2000000 },
+});
 
 // Middleware
 const app = express();
@@ -45,7 +91,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(cors());
 app.use(bodyParser.json()); // Middleware for parsing JSON request bodies
-app.post('/profile', upload.single('avatar'), function (req, res, next) {
+app.post('/profile', upload.single('avatar'), function (req, res) {
   singleUpload(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       // A Multer error occurred when uploading.
@@ -58,12 +104,13 @@ app.post('/profile', upload.single('avatar'), function (req, res, next) {
 });
 app.post(
   '/photos/upload',
-  upload.array('photos', 12),
-  (req: { body: { file: File; query: any } }, res: any, next: any) => {
-    if (!req.body.file) {
+  //   upload.array('thumbnail', 12),
+  upload.single('thumbnail'),
+  (req: { file: File; body: { file: File; query: any } }, res: any) => {
+    if (!req.file) {
       res.status(400).send('Error: No file uploaded.');
     } else {
-      res.send('Image uploaded successfully!');
+      res.status(200).send('Image uploaded successfully!');
     }
   }
 );
@@ -104,15 +151,30 @@ app.post(
     }
   }
 );
-app.post('/llama', async (req: { body: { query: any } }, res: any) => {
-  try {
-    const result = await llamaSemanticSearch(req.body.query);
-    console.log({ result });
-    res.json({ result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+app.post(
+  '/llama',
+  async (req: { body: { query: any; idToken: string } }, res: any) => {
+    // Verify the ID token and decode its payload.
+    // const idToken = req.body.idToken;
+    // getAuth().setUserCustomClaims
+    // const claims = await getAuth()
+    //   .verifyIdToken(idToken)
+    //   .then((decodedToken) => {
+    //     const uid = decodedToken.uid;
+    //     debugger;
+    //   })
+    //   .catch((error) => {
+    //     // Handle error
+    //   });
+    try {
+      const result = await llamaSemanticSearch(req.body.query);
+      console.log({ result });
+      res.json({ result });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
 app.post('/gemini', async (req: { body: { query: any } }, res: any) => {
   try {
     const result = await geminiSemanticSearch(req.body.query);
@@ -123,6 +185,8 @@ app.post('/gemini', async (req: { body: { query: any } }, res: any) => {
   }
 });
 app.post('/openai', async (req: { body: { query: any } }, res: any) => {
+  // Verify the ID token and decode its payload.
+  //   const claims = await getAuth().verifyIdToken(idToken);
   try {
     const result = await openAISemanticSearch(req.body.query);
     console.log({ result });
@@ -156,21 +220,3 @@ app.post('/analyze', async (req: { body: { query: any } }, res: any) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
-
-function getAuth(): any {
-  return getAuth()
-    .getUserByEmail('user@admin.example.com')
-    .then((user: any) => {
-      // Confirm user is verified.
-      if (user.emailVerified) {
-        // Add custom claims for additional privileges.
-        // This will be picked up by the user on token refresh or next sign in on new device.
-        return getAuth().setCustomUserClaims(user.uid, {
-          admin: true,
-        });
-      }
-    })
-    .catch((error: any) => {
-      console.log(error);
-    });
-}

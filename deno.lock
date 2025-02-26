@@ -33,6 +33,7 @@
         "npm:discord.js@^14.18.0",
         "npm:dotenv@^16.4.7",
         "npm:express@^4.21.2",
+        "npm:firebase-admin@^13.1.0",
         "npm:langchain@~0.3.19",
         "npm:multer@^1.4.5-lts.1",
         "npm:nodemon@^3.1.0",
