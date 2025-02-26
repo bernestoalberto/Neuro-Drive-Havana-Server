@@ -1,9 +1,9 @@
-import { deepSeek } from "./deepseek.js";
-import { openai } from "./chatgpt.js";
-import { googleGenerativeAI } from "./gemini.js";
+import { deepSeek } from './deepseek.js';
+import { openai } from './chatgpt.js';
+import { googleGenerativeAI } from './gemini.js';
 import { llm } from './llama.js';
 
-export async function semanticSearch(query: { message: any; model: any; }) {
+export async function semanticSearch(query: { message: any; model: any }) {
   try {
     const { message, model } = query;
     console.log(`Running Deep Seek AI model ${model}`);
@@ -11,10 +11,11 @@ export async function semanticSearch(query: { message: any; model: any; }) {
       model,
       messages: [
         {
-          role: "system",
-          content: "You are a powerful search engine. Return concise, factual answers.",
+          role: 'system',
+          content:
+            'You are a powerful search engine. Return concise, factual answers.',
         },
-        { role: "user", content: message },
+        { role: 'user', content: message },
       ],
       temperature: 0.3,
       max_tokens: 150,
@@ -24,41 +25,45 @@ export async function semanticSearch(query: { message: any; model: any; }) {
       console.log(completion.choices[0].message.content);
       return JSON.parse(content);
     } else {
-      throw new Error("Completion content is null");
+      throw new Error('Completion content is null');
     }
-  } catch(error:any) {
+  } catch (error: any) {
     throw error;
   }
 }
-export async function llamaSemanticSearch(query: { message: any; model: any; }) {
+export async function llamaSemanticSearch(query: { message: any; model: any }) {
   try {
     const { message, model } = query;
 
     console.log(`Running Llama Open AI model ${model}`);
 
     const completion = await llm.chat.completions.create({
-        model,
-        messages: [
-          {
-            role: "system",
-            content: "You are a powerful search engine. Return concise, factual answers.",
-          },
-          { role: "user", content: message },
-        ],
-        temperature: 0.3,
-        max_tokens: 150,
-      });
-      console.log(completion.choices[0].message.content);
-      return completion.choices[0].message.content;
-  } catch(error:any) {
-    console.error("Search error:", error.message);
+      model,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a powerful search engine. Return concise, factual answers.',
+        },
+        { role: 'user', content: message },
+      ],
+      temperature: 0.3,
+      max_tokens: 150,
+    });
+    return completion.choices[0].message.content;
+  } catch (error: any) {
+    console.error('Search error:', error.message);
     throw error;
   }
 }
 
-export async function geminiSemanticSearch(query: { query?: any; history?: any; message?: any; model?: any; }) {
+export async function geminiSemanticSearch(query: {
+  query?: any;
+  history?: any;
+  message?: any;
+  model?: any;
+}) {
   try {
-
     const { history, message, model } = query;
 
     console.log(history);
@@ -71,12 +76,15 @@ export async function geminiSemanticSearch(query: { query?: any; history?: any; 
     const result = await gemini.generateContent(message);
     console.log(result.response.text());
     return result.response.text();
-  } catch(error:any) {
-    console.error("Search error:", error.message);
+  } catch (error: any) {
+    console.error('Search error:', error.message);
     throw error;
   }
 }
-export async function openAISemanticSearch(query: { model: any; message: any; }) {
+export async function openAISemanticSearch(query: {
+  model: any;
+  message: any;
+}) {
   try {
     const { model, message } = query;
     console.log(`Running  Open AI model ${model}`);
@@ -84,18 +92,18 @@ export async function openAISemanticSearch(query: { model: any; message: any; })
       model,
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: [
             {
-              type: "text",
-              text: "You are a powerful search engine. Return concise, factual answers.",
+              type: 'text',
+              text: 'You are a powerful search engine. Return concise, factual answers.',
             },
           ],
         },
-        { role: "user", content: message },
+        { role: 'user', content: message },
       ],
       response_format: {
-        "type": "text",
+        type: 'text',
       },
       store: true,
       temperature: 0.3,
@@ -106,8 +114,8 @@ export async function openAISemanticSearch(query: { model: any; message: any; })
     });
     console.log(completion.choices[0].message.content);
     return completion.choices[0].message.content;
-  } catch(error:any) {
-    console.error("Search error:", error.cause.message + ":" + error.message);
+  } catch (error: any) {
+    console.error('Search error:', error.cause.message + ':' + error.message);
     //   throw error;
     return error.message;
   }
