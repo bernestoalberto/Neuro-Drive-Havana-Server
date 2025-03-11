@@ -1,35 +1,35 @@
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
 
-import multer from 'multer';
+import multer from "multer";
 
 const app = express();
 const PORT = 8000;
 
 // Loading modules
 
-import { analyzeData } from './src/analyze.ts';
-import bodyParser from 'body-parser';
+import { analyzeData } from "./src/analyze.ts";
+import bodyParser from "body-parser";
 import {
-  semanticSearch,
   geminiSemanticSearch,
-  openAISemanticSearch,
   llamaSemanticSearch,
-} from './src/search.ts';
+  openAISemanticSearch,
+  semanticSearch,
+} from "./src/search.ts";
 
 // Multer Configuration
 const storage = multer.diskStorage({
   destination: function (
     req: any,
     file: any,
-    cb: (arg0: null, arg1: string) => void
+    cb: (arg0: null, arg1: string) => void,
   ) {
-    cb(null, 'uploads/'); // Store images in an 'uploads' folder
+    cb(null, "uploads/"); // Store images in an 'uploads' folder
   },
   filename: function (
     req: any,
     file: { originalname: any },
-    cb: (arg0: null, arg1: any) => void
+    cb: (arg0: null, arg1: any) => void,
   ) {
     cb(null, file.originalname); // Maintain original filename
   },
@@ -49,22 +49,22 @@ app.use(bodyParser.json());
 // app.use(express.json()); // Middleware for parsing JSON request bodies
 
 app.post(
-  '/uploadImage',
-  upload.array('image'),
+  "/uploadImage",
+  upload.array("image"),
   (req: { body: { file: File; query: any } }, res: any) => {
     if (!req.body.file) {
-      res.status(400).send('Error: No file uploaded.');
+      res.status(400).send("Error: No file uploaded.");
     } else {
-      res.send('Image uploaded successfully!');
+      res.send("Image uploaded successfully!");
     }
-  }
+  },
 );
 
 app.post(
-  '/setCustomClaims',
+  "/setCustomClaims",
   async (
     req: { body: { idToken: any } },
-    res: { end: (arg0: string) => void }
+    res: { end: (arg0: string) => void },
   ) => {
     // Get the ID token passed.
     const idToken = req.body.idToken;
@@ -74,10 +74,10 @@ app.post(
 
     // Verify user is eligible for additional privileges.
     if (
-      typeof claims.email !== 'undefined' &&
-      typeof claims.email_verified !== 'undefined' &&
+      typeof claims.email !== "undefined" &&
+      typeof claims.email_verified !== "undefined" &&
       claims.email_verified &&
-      claims.email.endsWith('@admin.example.com')
+      claims.email.endsWith("@admin.example.com")
     ) {
       // Add custom claims for additional privileges.
       await getAuth().setCustomUserClaims(claims.sub, {
@@ -87,16 +87,16 @@ app.post(
       // Tell client to refresh token on user.
       res.end(
         JSON.stringify({
-          status: 'success',
-        })
+          status: "success",
+        }),
       );
     } else {
       // Return nothing.
-      res.end(JSON.stringify({ status: 'ineligible' }));
+      res.end(JSON.stringify({ status: "ineligible" }));
     }
-  }
+  },
 );
-app.post('/llama', async (req: { body: { query: any } }, res: any) => {
+app.post("/llama", async (req: { body: { query: any } }, res: any) => {
   try {
     const result = await llamaSemanticSearch(req.body.query);
     console.log({ result });
@@ -105,7 +105,7 @@ app.post('/llama', async (req: { body: { query: any } }, res: any) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.post('/gemini', async (req: { body: { query: any } }, res: any) => {
+app.post("/gemini", async (req: { body: { query: any } }, res: any) => {
   try {
     const result = await geminiSemanticSearch(req.body.query);
     console.log({ result });
@@ -114,18 +114,18 @@ app.post('/gemini', async (req: { body: { query: any } }, res: any) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.post('/openai', async (req: { body: { query: any } }, res: any) => {
+app.post("/openai", async (req: { body: { query: any } }, res: any) => {
   try {
     const result = await openAISemanticSearch(req.body.query);
     console.log({ result });
     res.json({ result });
   } catch (error) {
-    console.error('Error with ChatGPT request:', error);
-    res.status(500).send('Error communicating with ChatGPT');
+    console.error("Error with ChatGPT request:", error);
+    res.status(500).send("Error communicating with ChatGPT");
   }
 });
 
-app.post('/search', async (req: { body: { query: any } }, res: any) => {
+app.post("/search", async (req: { body: { query: any } }, res: any) => {
   try {
     const result = await semanticSearch(req.body.query);
     console.log({ result });
@@ -134,7 +134,7 @@ app.post('/search', async (req: { body: { query: any } }, res: any) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.post('/analyze', async (req: { body: { query: any } }, res: any) => {
+app.post("/analyze", async (req: { body: { query: any } }, res: any) => {
   console.log(req.body.query.text);
   try {
     const analysis = await analyzeData(req.body.query.text);
@@ -151,7 +151,7 @@ app.listen(PORT, () => {
 
 function getAuth(): any {
   return getAuth()
-    .getUserByEmail('user@admin.example.com')
+    .getUserByEmail("user@admin.example.com")
     .then((user: any) => {
       // Confirm user is verified.
       if (user.emailVerified) {

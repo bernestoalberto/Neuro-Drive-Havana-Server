@@ -2,7 +2,7 @@
 
 // use firebase to verify
 // import admin from 'firebase-admin';
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
+import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import process from 'node:process';
 import dotenv from 'dotenv';
 

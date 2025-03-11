@@ -1,5 +1,6 @@
-import express from 'express';
+import express, { type Request, type Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import bodyParser from 'body-parser';
 import { getAuth } from 'firebase-admin/auth';
 import multer from 'multer';
@@ -7,45 +8,24 @@ const singleUpload = multer().single('avatar');
 const PORT = 8000;
 
 // Loading modules
-import { analyzeData } from './analyze.js';
+import { analyzeData } from './analyze.ts';
 import {
-  semanticSearch,
+  geminiImageVision,
   geminiSemanticSearch,
-  openAISemanticSearch,
   llamaSemanticSearch,
-} from './search.js';
-
-// import sdk from '../firebase.sdk.ts';
-// // pass it to middlewear
-// import verify  from './auth.middleware';
-
-// let verify = verify(sdk);
-// import firebaseApp from './firebase.sdk.js';
-// pass it to middleware
-// import * as verify from './auth.middleware.js';
-
-// function localGetAuth(): any {
-//   return getAuth(firebaseApp)
-//     .getUserByEmail('user@admin.example.com')
-//     .then((user: any) => {
-//       // Confirm user is verified.
-//       if (user.emailVerified) {
-//         // Add custom claims for additional privileges.
-//         // This will be picked up by the user on token refresh or next sign in on new device.
-//         return getAuth().setCustomUserClaims(user.uid, {
-//           admin: true,
-//         });
-//       }
-//     })
-//     .catch((error: any) => {
-//       console.log(error);
-//     });
-// }
+  openAImageVision,
+  openAISemanticSearch,
+  semanticSearch,
+  claudeSemanticSearch,
+} from './search.ts';
+import { CLAUDE, DEEPSEEK, GEMINI, LLAMA, OPENAI } from './helper.ts';
+import { textToImage } from './gemini.ts';
+import { openAiTextToImage } from './chatgpt.ts';
 
 // Multer Configuration
 const storage = multer.diskStorage({
   destination: function (
-    req: any,
+    req: Request,
     file: any,
     cb: (arg0: null, arg1: string) => void
   ) {
@@ -54,7 +34,7 @@ const storage = multer.diskStorage({
     cb(null, 'server/uploads/'); // Store images in an 'uploads' folder
   },
   filename: function (
-    req: any,
+    req: Request,
     file: { originalname: any },
     cb: (arg0: null, arg1: any) => void
   ) {
@@ -62,24 +42,10 @@ const storage = multer.diskStorage({
     cb(null, file.originalname); // Maintain original filename
   },
 });
-// const fileFilter = (
-//   req: any,
-//   file: { mimetype: string },
-//   cb: multer.FileFilterCallback
-// ) => {
-//   // Check if file is an image or video
-//   if (
-//     req.file &&
-//     file.mimetype.startsWith('image/') ||
-//     file.mimetype.startsWith('video/')
-//   ) {
-//     cb(null, true);
-//   }
-// };
+
 // Multer Setup (For handling file uploads)
 const upload = multer({
   storage,
-  //   fileFilter: fileFilter,
   limits: { fileSize: 2000000 },
 });
 
@@ -88,7 +54,7 @@ const app = express();
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
-
+app.use(helmet());
 app.use(cors());
 app.use(bodyParser.json()); // Middleware for parsing JSON request bodies
 app.post('/profile', upload.single('avatar'), function (req, res) {
@@ -106,51 +72,101 @@ app.post(
   '/photos/upload',
   //   upload.array('thumbnail', 12),
   upload.single('thumbnail'),
-  (req: { file: File; body: { file: File; query: any } }, res: any) => {
+  async (
+    req: { file: Express.Multer.File; body: { query: any } },
+    res: any
+  ) => {
     if (!req.file) {
       res.status(400).send('Error: No file uploaded.');
     } else {
-      res.status(200).send('Image uploaded successfully!');
+      const body = JSON.parse(req.body.query);
+      const { model, message, typeOfAI } = body;
+      let result = '';
+      switch (typeOfAI) {
+        case GEMINI:
+          result = await geminiImageVision(
+            model,
+            message,
+            typeOfAI,
+            `${req.file.destination}${req.file.filename}`,
+            req.file.mimetype
+          );
+          break;
+        case OPENAI:
+          result = await openAImageVision(
+            model,
+            message,
+            `${req.file.destination}${req.file.filename}`,
+            req.file.mimetype
+          );
+          break;
+        case CLAUDE:
+        case LLAMA:
+        case DEEPSEEK:
+          result = 'No implemented yet';
+          break;
+      }
+
+      res.status(200).json({ result });
     }
   }
 );
-
-app.post(
-  '/setCustomClaims',
-  async (
-    req: { body: { idToken: any } },
-    res: { end: (arg0: string) => void }
-  ) => {
-    // Get the ID token passed.
-    const idToken = req.body.idToken;
-
-    // Verify the ID token and decode its payload.
-    const claims = await getAuth().verifyIdToken(idToken);
-
-    // Verify user is eligible for additional privileges.
-    if (
-      typeof claims.email !== 'undefined' &&
-      typeof claims.email_verified !== 'undefined' &&
-      claims.email_verified &&
-      claims.email.endsWith('@admin.example.com')
-    ) {
-      // Add custom claims for additional privileges.
-      await getAuth().setCustomUserClaims(claims.sub, {
-        admin: true,
-      });
-
-      // Tell client to refresh token on user.
-      res.end(
-        JSON.stringify({
-          status: 'success',
-        })
-      );
-    } else {
-      // Return nothing.
-      res.end(JSON.stringify({ status: 'ineligible' }));
-    }
+app.post('/photos/generate', async (req: Request, res: Response) => {
+  debugger;
+  const body = JSON.parse(req.body.query);
+  const { model, message, typeOfAI } = body;
+  let result = '';
+  switch (typeOfAI) {
+    case GEMINI:
+      result = await textToImage(model, message);
+      break;
+    case OPENAI:
+      result = await openAiTextToImage(model, message);
+      break;
+    case CLAUDE:
+    case LLAMA:
+    case DEEPSEEK:
+      result = 'Not implemented yet';
+      break;
+    default:
+      result = 'Unknown AI type';
+      break;
   }
-);
+
+  res.status(200).json({ result });
+});
+
+// app.post('/setCustomClaims', async (req: Request, res: Response) => {
+//   // Get the ID token passed.
+//   const idToken = req.body.idToken;
+
+//   // Verify the ID token and decode its payload.
+//   const claims = await getAuth().verifyIdToken(idToken);
+
+//   // Verify user is eligible for additional privileges.
+//   if (
+//     typeof claims.email !== 'undefined' &&
+//     typeof claims.email_verified !== 'undefined' &&
+//     claims.email_verified &&
+//     claims.email.endsWith('@admin.example.com')
+//   ) {
+//     // Add custom claims for additional privileges.
+//     await getAuth().setCustomUserClaims(claims.sub, {
+//       admin: true,
+//     });
+
+//     // Tell client to refresh token on user.
+//     res.end(
+//       JSON.stringify({
+//         status: 'success',
+//       })
+//     );
+//   } else {
+//     // Return nothing.
+//     res.end(JSON.stringify({ status: 'ineligible' }));
+//   }
+// });
+
 app.post(
   '/llama',
   async (req: { body: { query: any; idToken: string } }, res: any) => {
@@ -161,7 +177,6 @@ app.post(
     //   .verifyIdToken(idToken)
     //   .then((decodedToken) => {
     //     const uid = decodedToken.uid;
-    //     debugger;
     //   })
     //   .catch((error) => {
     //     // Handle error
@@ -175,7 +190,7 @@ app.post(
     }
   }
 );
-app.post('/gemini', async (req: { body: { query: any } }, res: any) => {
+app.post('/gemini', async (req: Request, res: Response) => {
   try {
     const result = await geminiSemanticSearch(req.body.query);
     console.log({ result });
@@ -184,7 +199,7 @@ app.post('/gemini', async (req: { body: { query: any } }, res: any) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.post('/openai', async (req: { body: { query: any } }, res: any) => {
+app.post('/openai', async (req: Request, res: Response) => {
   // Verify the ID token and decode its payload.
   //   const claims = await getAuth().verifyIdToken(idToken);
   try {
@@ -196,8 +211,20 @@ app.post('/openai', async (req: { body: { query: any } }, res: any) => {
     res.status(500).send('Error communicating with ChatGPT');
   }
 });
+app.post('/claude', async (req: Request, res: Response) => {
+  // Verify the ID token and decode its payload.
+  //   const claims = await getAuth().verifyIdToken(idToken);
+  try {
+    const result = await claudeSemanticSearch(req.body.query);
+    console.log({ result });
+    res.json({ result });
+  } catch (error) {
+    console.error('Error with ChatGPT request:', error);
+    res.status(500).send('Error communicating with ChatGPT');
+  }
+});
 
-app.post('/search', async (req: { body: { query: any } }, res: any) => {
+app.post('/search', async (req: Request, res: Response) => {
   try {
     const result = await semanticSearch(req.body.query);
     console.log({ result });
@@ -206,16 +233,22 @@ app.post('/search', async (req: { body: { query: any } }, res: any) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.post('/analyze', async (req: { body: { query: any } }, res: any) => {
+app.post('/analyze', async (req: Request, res: Response) => {
   console.log(req.body.query.text);
   try {
     const analysis = await analyzeData(req.body.query.text);
     console.log(analysis);
     res.json(analysis);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error: unknown) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 });
+
+// app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+//   res.status(500).json({ message: err });
+// });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
