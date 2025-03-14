@@ -112,8 +112,7 @@ app.post(
   }
 );
 app.post('/photos/generate', async (req: Request, res: Response) => {
-  debugger;
-  const body = JSON.parse(req.body.query);
+  const body = req.body.query;
   const { model, message, typeOfAI } = body;
   let result = '';
   switch (typeOfAI) {

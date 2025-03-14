@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import process from 'node:process';
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -52,7 +52,7 @@ export async function openAiTextToImage(model: string, message: string) {
     store: true,
   });
 
-  console.log(response.choices[0]);
+  console.log(response.message.content[0]);
   return `${response.choices[0]}`;
 //   return response.choices[0];
 }

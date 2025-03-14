@@ -72,14 +72,15 @@ export async function textToImage(model: string, prompt: string) {
     model, // 'gemini-pro-vision',
   });
 
-  const imageParts = [
-    fileToGenerativePart('image1.jpg', 'image/png'),
-    fileToGenerativePart('image2.jpg', 'image/jpeg'),
-  ];
+  //   const imageParts = [
+  // fileToGenerativePart('./uploads/downloaded.jpeg', 'image/jpeg'),
+  // fileToGenerativePart('image2.jpg', 'image/jpeg'),
+  //   ];
 
-  const result = await gModel.generateContent([prompt, ...imageParts]);
+  //   const result = await gModel.generateContent([prompt, ...imageParts]);
+  const result = await gModel.generateContent([prompt]);
   // For text-and-image input (multimodal)
-  const { totalTokens } = await gModel.countTokens([prompt, ...imageParts]);
+  const { totalTokens } = await gModel.countTokens([prompt]);
   const response = await result.response;
   const text = response.text();
   console.log(text);
