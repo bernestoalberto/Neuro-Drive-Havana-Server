@@ -1,9 +1,9 @@
-import { deepSeek } from './deepseek.js';
-import { openai } from './chatgpt.js';
-import { googleGenerativeAI } from './gemini.js';
-import { llm } from './llama.js';
-
-export async function semanticSearch(query: { message: any; model: any }) {
+import { deepSeek } from './deepseek.ts';
+import { openai, openAiImageToText } from './chatgpt.ts';
+import { googleGenerativeAI, geminiImageToText } from './gemini.ts';
+import { llm, llamaImageToText } from './llama.ts';
+import { anthropic } from './claude.ts';
+export async function semanticSearch(query: { message: string; model: string }) {
   try {
     const { message, model } = query;
     console.log(`Running Deep Seek AI model ${model}`);
@@ -27,11 +27,11 @@ export async function semanticSearch(query: { message: any; model: any }) {
     } else {
       throw new Error('Completion content is null');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     throw error;
   }
 }
-export async function llamaSemanticSearch(query: { message: any; model: any }) {
+export async function llamaSemanticSearch(query: { message: string; model: string }) {
   try {
     const { message, model } = query;
 
@@ -82,8 +82,8 @@ export async function geminiSemanticSearch(query: {
   }
 }
 export async function openAISemanticSearch(query: {
-  model: any;
-  message: any;
+  model: string;
+  message: string;
 }) {
   try {
     const { model, message } = query;
@@ -116,6 +116,73 @@ export async function openAISemanticSearch(query: {
     return completion.choices[0].message.content;
   } catch (error: any) {
     console.error('Search error:', error.cause.message + ':' + error.message);
+    //   throw error;
+    return error.message;
+  }
+}
+export async function claudeSemanticSearch(query: {
+  model: string;
+  message: string;
+}) {
+  try {
+    const { model, message } = query;
+    console.log(`Running  Claude model ${model}`);
+    const msg = await anthropic.messages.create({
+      model,
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: message }],
+    });
+    console.log(msg);
+    return msg;
+  } catch (error: any) {
+    console.error('Search error:', error.cause.message + ':' + error.message);
+    //   throw error;
+    return error.message;
+  }
+}
+
+export async function openAImageVision(
+  model: string,
+  message: string,
+  url: string,
+  fileExt: string
+) {
+  try {
+    const response = await openAiImageToText(model, message, url, fileExt);
+    return response.message.content;
+  } catch (error: any) {
+    console.error('Search error:', error.message);
+    //   throw error;
+    return error.message;
+  }
+}
+export async function llamaImageVision(
+  model: string,
+  message: string,
+  url: string
+) {
+  try {
+    const response = await llamaImageToText(model, message, url);
+    return response;
+  } catch (error: any) {
+    console.error('Search error:', error.message);
+    //   throw error;
+    return error.message;
+  }
+}
+export async function geminiImageVision(
+  model: string,
+  message: string,
+  typeOfAI: string,
+  url: string,
+  fileExt: string = 'image/jpg'
+) {
+  try {
+    console.log(`Running  ${typeOfAI}  with model ${model}`);
+    const response = await geminiImageToText(model, message, url, fileExt);
+    return response;
+  } catch (error: any) {
+    console.error('Search error:', error.message);
     //   throw error;
     return error.message;
   }
