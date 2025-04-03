@@ -1,13 +1,16 @@
-import { deepSeek } from './deepseek.ts';
+import { DeepSeek } from './deepseek.ts';
 import { openai, openAiImageToText } from './chatgpt.ts';
 import { googleGenerativeAI, geminiImageToText } from './gemini.ts';
 import { llm, llamaImageToText } from './llama.ts';
 import { anthropic } from './claude.ts';
-export async function semanticSearch(query: { message: string; model: string }) {
+export async function semanticSearch(query: {
+  message: string;
+  model: string;
+}) {
   try {
     const { message, model } = query;
     console.log(`Running Deep Seek AI model ${model}`);
-    const completion = await deepSeek.chat.completions.create({
+    const completion = await DeepSeek.chat.completions.create({
       model,
       messages: [
         {
@@ -31,7 +34,10 @@ export async function semanticSearch(query: { message: string; model: string }) 
     throw error;
   }
 }
-export async function llamaSemanticSearch(query: { message: string; model: string }) {
+export async function llamaSemanticSearch(query: {
+  message: string;
+  model: string;
+}) {
   try {
     const { message, model } = query;
 

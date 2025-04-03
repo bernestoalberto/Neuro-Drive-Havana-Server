@@ -1,36 +1,37 @@
-import { deepSeek } from "./deepseek.ts";
-import process from "node:process";
-import dotenv from "dotenv";
+import { DeepSeek } from './deepseek.ts';
+
+import process from 'node:process';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
 export async function analyzeData(text: string) {
-  const model: string = process.env.DEEPSEEK_MODEL || "";
-  if (model === "") {
-    throw new Error("Completion content is null");
+  const model: string = process.env.DEEPSEEK_MODEL || '';
+  if (model === '') {
+    throw new Error('Completion content is null');
   }
   try {
     console.log(`Running AI model ${process.env.DEEPSEEK_MODEL}`);
-    const completion = await deepSeek.chat.completions.create({
+    const completion = await DeepSeek.chat.completions.create({
       model,
       messages: [
         {
-          role: "system",
+          role: 'system',
           content:
-            "Analyze this text for sentiment, key topics, and named entities.",
+            'Analyze this text for sentiment, key topics, and named entities.',
         },
-        { role: "user", content: text },
+        { role: 'user', content: text },
       ],
       temperature: 0.1,
       max_tokens: 256,
     });
     const content = completion.choices[0].message.content;
     if (content === null) {
-      throw new Error("Completion content is null");
+      throw new Error('Completion content is null');
     }
     return JSON.parse(content);
   } catch (error: any) {
-    console.error("Analysis error:", error.message);
+    console.error('Analysis error:', error.message);
     throw error;
   }
 }

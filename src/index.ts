@@ -2,7 +2,6 @@ import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import bodyParser from 'body-parser';
-import { getAuth } from 'firebase-admin/auth';
 import multer from 'multer';
 const singleUpload = multer().single('avatar');
 const PORT = 8000;
