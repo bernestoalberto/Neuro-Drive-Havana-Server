@@ -20,6 +20,11 @@ import {
 import { CLAUDE, DEEPSEEK, GEMINI, LLAMA, OPENAI } from './helper.ts';
 import { textToImage } from './gemini.ts';
 import { openAiTextToImage } from './chatgpt.ts';
+import {
+  generateChatCompletion,
+  generateEmbedding,
+  generateText,
+} from './gemma.ts';
 
 // Multer Configuration
 const storage = multer.diskStorage({
@@ -192,6 +197,26 @@ app.post('/gemini', async (req: Request, res: Response) => {
   try {
     const result = await geminiSemanticSearch(req.body.query);
     console.log({ result });
+    res.json({ result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post('/gemma', async (req: Request, res: Response) => {
+  try {
+    const { message, endpoint, model } = req.body.query;
+    let result = null;
+    switch (endpoint) {
+      case 'chat':
+        result = await generateChatCompletion(message, model);
+        break;
+      case 'embedding':
+        result = await generateEmbedding(message, model);
+        break;
+      default:
+        result = await generateText(message, model);
+        break;
+    }
     res.json({ result });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

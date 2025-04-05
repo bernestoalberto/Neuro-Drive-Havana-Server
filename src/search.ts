@@ -3,6 +3,7 @@ import { openai, openAiImageToText } from './chatgpt.ts';
 import { googleGenerativeAI, geminiImageToText } from './gemini.ts';
 import { llm, llamaImageToText } from './llama.ts';
 import { anthropic } from './claude.ts';
+
 export async function semanticSearch(query: {
   message: string;
   model: string;
