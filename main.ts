@@ -107,6 +107,7 @@ app.post("/llama", async (req: { body: { query: any } }, res: any) => {
 });
 app.post("/gemini", async (req: { body: { query: any } }, res: any) => {
   try {
+	  console.dir(req.body.query);
     const result = await geminiSemanticSearch(req.body.query);
     console.log({ result });
     res.json({ result });

@@ -3,7 +3,11 @@ import { openai, openAiImageToText } from './chatgpt.ts';
 import { googleGenerativeAI, geminiImageToText } from './gemini.ts';
 import { llm, llamaImageToText } from './llama.ts';
 import { anthropic } from './claude.ts';
-export async function semanticSearch(query: { message: string; model: string }) {
+
+export async function semanticSearch(query: {
+  message: string;
+  model: string;
+}) {
   try {
     const { message, model } = query;
     console.log(`Running Deep Seek AI model ${model}`);
@@ -31,7 +35,10 @@ export async function semanticSearch(query: { message: string; model: string }) 
     throw error;
   }
 }
-export async function llamaSemanticSearch(query: { message: string; model: string }) {
+export async function llamaSemanticSearch(query: {
+  message: string;
+  model: string;
+}) {
   try {
     const { message, model } = query;
 
@@ -60,20 +67,22 @@ export async function llamaSemanticSearch(query: { message: string; model: strin
 export async function geminiSemanticSearch(query: {
   query?: any;
   history?: any;
-  message?: any;
-  model?: any;
+  message?: string;
+  model?: string;
 }) {
   try {
-    const { history, message, model } = query;
+    const { message, model } = query;
 
-    console.log(history);
+    console.log(model);
 
-    console.log(message);
-
-    const gemini = googleGenerativeAI.getGenerativeModel(model);
+    const gemini = googleGenerativeAI.getGenerativeModel({
+      model: model || 'gemini-2.5-flash',
+    });
     console.log(`Running Gemini model ${model}`);
 
-    const result = await gemini.generateContent(message);
+    const result = await gemini.generateContent(
+      message || 'What is the meaning of life?'
+    );
     console.log(result.response.text());
     return result.response.text();
   } catch (error: any) {
@@ -179,7 +188,12 @@ export async function geminiImageVision(
 ) {
   try {
     console.log(`Running  ${typeOfAI}  with model ${model}`);
-    const response = await geminiImageToText(model, message, url, fileExt);
+    const response = await geminiImageToText(
+      (model = 'gemini-2.5-flash'),
+      message,
+      url,
+      fileExt
+    );
     return response;
   } catch (error: any) {
     console.error('Search error:', error.message);

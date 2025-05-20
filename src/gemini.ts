@@ -67,7 +67,7 @@ export async function geminiImageToText(
   return generatedContent.response.text();
 }
 
-export async function textToImage(model: string, prompt: string) {
+export async function textToImage(model: string = 'gemini-2.5-flash', prompt: string) {
   const gModel = googleGenerativeAI.getGenerativeModel({
     model, // 'gemini-pro-vision',
   });

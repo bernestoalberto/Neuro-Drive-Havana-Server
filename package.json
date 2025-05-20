@@ -6,6 +6,7 @@
   "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.38.0",
+    "@genkit-ai/googleai": "^1.8.0",
     "@google/generative-ai": "^0.2.1",
     "@langchain/core": "^0.3.40",
     "@langchain/openai": "^0.4.4",
@@ -25,7 +26,7 @@
   },
   "scripts": {
     "serve": "node --experimental-transform-types src/index.ts",
-    "debug":"deno run --inspect-brk -RN jsr:@std/http/file-server",
+    "debug": "deno run --inspect-brk -RN jsr:@std/http/file-server",
     "build": "tsc"
   },
   "devDependencies": {
