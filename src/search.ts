@@ -54,7 +54,7 @@ export async function llamaSemanticSearch(query: {
         },
         { role: 'user', content: message },
       ],
-      temperature: 0.3,
+      temperature: 0.1,
       max_tokens: 150,
     });
     return completion.choices[0].message.content;
