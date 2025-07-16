@@ -52,7 +52,7 @@ export async function openAiTextToImage(model: string, message: string) {
     store: true,
   });
 
-  console.log(response.message.content[0]);
+  //   console.log(response.message?.content[0]);
   return `${response.choices[0]}`;
-//   return response.choices[0];
+  //   return response.choices[0];
 }

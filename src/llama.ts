@@ -4,17 +4,17 @@ import dotenv from 'dotenv';
 import sharp from 'sharp';
 import { pipeline } from '@xenova/transformers';
 import { LMStudioClient } from '@lmstudio/sdk';
-import ollama from 'ollama';
+// import ollama from 'ollama';
 
-const message = { role: 'user', content: 'Why is the sky blue?' };
-const response = await ollama.chat({
-  model: 'llama3.1',
-  messages: [message],
-  stream: true,
-});
-for await (const part of response) {
-  process.stdout.write(part.message.content);
-}
+// const message = { role: 'user', content: 'Why is the sky blue?' };
+// const response = await ollama.chat({
+//   model: 'llama3.2:1b-instruct-q2_K',
+//   messages: [message],
+//   stream: true,
+// });
+// for await (const part of response) {
+//   process.stdout.write(part.message.content);
+// }
 import fs from 'node:fs';
 dotenv.config();
 
@@ -80,22 +80,22 @@ export async function chatWithLlmByModel(model: string, message: string) {
     throw error;
   }
 }
-export async function chatWithOLlamaByModel(model: string, message: string) {
-  try {
-    // Load the model
-    console.log(`Loading LLama model ${model}...`);
-    const messages = { role: 'user', content: message };
-    const response = await ollama.chat({
-      model: 'llama3.1',
-      messages: [messages],
-      stream: true,
-    });
-    for await (const part of response) {
-      process.stdout.write(part.message.content);
-    }
-    return response;
-  } catch (error) {
-    console.error('Error processing image:', error);
-    throw error;
-  }
-}
+// export async function chatWithOLlamaByModel(model: string, message: string) {
+//   try {
+//     // Load the model
+//     console.log(`Loading LLama model ${model}...`);
+//     const messages = { role: 'user', content: message };
+//     const response = await ollama.chat({
+//       model: 'llama3.1',
+//       messages: [messages],
+//       stream: true,
+//     });
+//     for await (const part of response) {
+//       process.stdout.write(part.message.content);
+//     }
+//     return response;
+//   } catch (error) {
+//     console.error('Error processing image:', error);
+//     throw error;
+//   }
+// }
